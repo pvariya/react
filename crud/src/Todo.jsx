@@ -1,14 +1,16 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { use } from 'react'
 import API from './config/Api'
 import Showdata from './Showdata'
 
 const Todo = () => {
     const [data, setData] = useState({
-        id: null,
+        id: '',
         name: '',
         grid: ''
     })
+
+    const [update, setIsUpdate] = useState(false)
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -20,52 +22,46 @@ const Todo = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        if (data.id) {
+        if (setIsUpdate) {
             updateData(data)
         } else {
-            creatData(data)
+            creatData({
+                ...data,
+                id: Date.now().toString()
+            })
         }
         setData({
-            id: null,
+            id: '',
             name: '',
             grid: ''
         })
+        setIsUpdate(false)
     }
 
-    const updateData = async (data) => {
-        await API.patch(`/todos/${data.id}`, { name: data.name, grid: data.grid });
-    };
 
-    const handalUpadte = (todo) => {
-        setData({
-            id: todo.id,
-            name: todo.name,
-            grid: todo.grid,
-        });
+    const updateData = async (data) => {
+        let res = await API.put(`/todos/${data.id}`, data)
+    }
+    const handalUpadte = () => {
+        setData(data)
+        setIsUpdate(true)
+
     }
 
     const creatData = async (data) => {
         let res = await API.post('/todos', data)
     }
 
-    const deleteData = async (id) => {
-        try {
-          await API.delete(`/todos/${id}`);
-        } catch (err) {
-          console.error('Error deleting todo:', err);
-        }
-      };
-
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <input type="text" onChange={handleInputChange} name='name' value={data.name} placeholder='name' />
-                <input type="text" onChange={handleInputChange} name='grid' value={data.grid} placeholder='grid' />
-                <button type='submit'>{data.id ? 'Update' : 'add'}</button>
+                <input required type="text" onChange={handleInputChange} name='name' value={data.name} placeholder='name' />
+                <input required type="text" onChange={handleInputChange} name='grid' value={data.grid} placeholder='grid' />
+                <button type='submit'>{'add'}</button>
             </form>
             <hr />
 
-            <Showdata handalUpadte={handalUpadte} deleteData={deleteData} />
+            <Showdata handalUpadte={handalUpadte} />
         </div>
     )
 }
